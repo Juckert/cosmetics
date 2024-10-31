@@ -45,6 +45,16 @@ class TextExtractor:
         extracted_text = pytesseract.image_to_string(self.processed_image, config=custom_config)
         return extracted_text
 
+    def save_text_to_file(self, text: str, output_file: str):
+        """Сохранение извлеченного текста в файл."""
+        logging.info(f"Сохранение текста в файл {output_file}")
+        try:
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write(text)
+        except Exception as e:
+            logging.error(f"Ошибка при сохранении текста в файл: {e}")
+            raise
+
 if __name__ == '__main__':
     do = TextExtractor('1.jpg')
     print(do.its())
