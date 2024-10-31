@@ -2,6 +2,7 @@ from PIL import Image
 import pytesseract
 import logging
 import cv2
+import Levenshtein
 
 
 class TextExtractor:
@@ -68,6 +69,14 @@ class TextExtractor:
         
         wrr = (correctly_recognized_words / total_words) * 100 if total_words > 0 else 0
         return wrr
+
+    def calculate_cer(self, ground_truth: str, ocr_output: str) -> float:
+        """Вычисление Character Error Rate (CER)."""
+        logging.info("Вычисление Character Error Rate (CER).")
+        distance = Levenshtein.distance(ground_truth, ocr_output)
+        n = len(ground_truth)
+        cer = distance / n if n > 0 else 0
+        return cer  
 
 if __name__ == '__main__':
     do = TextExtractor('1.jpg')
