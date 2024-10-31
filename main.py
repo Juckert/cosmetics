@@ -1,19 +1,18 @@
-# python.exe -m pip install --upgrade pip
-# pip install pytesseract
+from DoWorkInterface import DoWork
+import os
 
-from PIL import Image
-import pytesseract
+get_time = lambda f: os.stat(f).st_ctime
+
+fn = 'file.name'
+prev_time = get_time(fn)
 
 
-class DoWork:
-    def __init__(self, file: str, lang='rus+eng', path='pic/'):
-        self.lang = lang
-        self.path = path
-        self.file = file
-
-    def its(self):
-        return pytesseract.image_to_string(Image.open(self.path + self.file), self.lang)
+main_method = DoWork('1.jpg') # 1 jpg --- current container
 
 
 if __name__ == '__main__':
-    print('Use DoWork interface')
+    while True:
+        t = get_time(fn)
+        if t != prev_time:
+            main_method.its()
+            prev_time = t
