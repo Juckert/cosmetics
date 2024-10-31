@@ -55,6 +55,20 @@ class TextExtractor:
             logging.error(f"Ошибка при сохранении текста в файл: {e}")
             raise
 
+    def calculate_wrr(self, ground_truth: str, ocr_output: str) -> float:
+        """Вычисление Word Recognition Rate (WRR)."""
+        logging.info("Вычисление Word Recognition Rate (WRR).")
+        
+        ground_truth_words = ground_truth.split()
+        ocr_output_words = ocr_output.split()
+        
+        total_words = len(ground_truth_words)
+        
+        correctly_recognized_words = sum(1 for word in ocr_output_words if word in ground_truth_words)
+        
+        wrr = (correctly_recognized_words / total_words) * 100 if total_words > 0 else 0
+        return wrr
+
 if __name__ == '__main__':
     do = TextExtractor('1.jpg')
     print(do.its())
