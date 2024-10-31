@@ -4,6 +4,7 @@ import logging
 import cv2
 import Levenshtein
 
+pytesseract.pytesseract.tesseract_cmd = r'Путь до tesseract'
 
 class TextExtractor:
     def __init__(self, image_path: str):
@@ -104,6 +105,11 @@ class TextExtractor:
             logging.error(f"Ошибка в процессе обработки: {e}")
 
 if __name__ == '__main__':
-    do = TextExtractor('1.jpg')
-    print(do.its())
+    image_path = 'Путь до изображения'
+    output_file = 'output_text.txt'
+    
+    ground_truth = '''Текст'''
+
+    extractor = TextExtractor(image_path)
+    extractor.process(output_file, ground_truth, blur=False, adaptive=False, psm=6)
     
