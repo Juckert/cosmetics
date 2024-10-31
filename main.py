@@ -1,7 +1,7 @@
 from PIL import Image
 import pytesseract
 import logging
-
+import cv2
 
 class TextExtractor:
     def __init__(self, image_path: str):
@@ -11,8 +11,13 @@ class TextExtractor:
 
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-    def its(self):
-        return pytesseract.image_to_string(Image.open(self.path + self.file), self.lang)
+    def load_image(self):
+        """Загрузка изображения из файла."""
+        logging.info(f"Загрузка изображения из {self.image_path}")
+        self.image = cv2.imread(self.image_path)
+        if self.image is None:
+            logging.error(f"Не удалось загрузить изображение: {self.image_path}")
+            raise FileNotFoundError(f"Не удалось загрузить изображение: {self.image_path}")
 
 
 if __name__ == '__main__':
