@@ -102,4 +102,13 @@ class TextExtractor:
 
         except Exception as e:
             logging.error(f"Ошибка в процессе обработки: {e}")
+
+if __name__ == '__main__':
+    image_path = 'Путь до изображения'
+    output_file = 'output_text.txt'
+    
+    ground_truth = '''Текст'''
+
+    extractor = TextExtractor(image_path)
+    extractor.process(output_file, ground_truth, blur=False, adaptive=False, psm=6)
     
