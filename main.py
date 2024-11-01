@@ -33,3 +33,15 @@ class TextExtractor:
                                                          cv2.THRESH_BINARY_INV, 11, 2)
         else:
             _, self.processed_image = cv2.threshold(gray_image, 150, 255, cv2.THRESH_BINARY_INV)
+
+    def extract_text(self, psm: int = 6):
+        """Извлечение текста из обработанного изображения."""
+        if self.processed_image is None:
+            logging.error("Изображение не обработано. Вызовите метод preprocess_image() перед extract_text().")
+            raise ValueError("Изображение не обработано. Вызовите метод preprocess_image() перед extract_text().")
+        
+        logging.info(f"Извлечение текста с помощью Tesseract с параметром --psm {psm}.")
+        custom_config = f'--psm {psm} -l eng+rus'  # Указываем язык
+        extracted_text = pytesseract.image_to_string(self.processed_image, config=custom_config)
+        return extracted_text
+    
