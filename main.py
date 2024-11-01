@@ -76,5 +76,30 @@ class TextExtractor:
         distance = Levenshtein.distance(ground_truth, ocr_output)
         n = len(ground_truth)
         cer = distance / n if n > 0 else 0
-        return cer  
+        return cer 
+
+    def process(self, output_file: str, ground_truth: str, blur: bool = False, adaptive: bool = False, psm: int = 6):
+        """Общий метод для выполнения всех шагов обработки и извлечения текста."""
+        try:
+            self.load_image()
+            self.preprocess_image(blur=blur, adaptive=adaptive)
+            extracted_text = self.extract_text(psm=psm)
+            self.save_text_to_file(extracted_text, output_file)
+            
+            # Вычисление и вывод WRR и CER
+            wrr = self.calculate_wrr(ground_truth, extracted_text)
+            cer = self.calculate_cer(ground_truth, extracted_text)
+            
+            logging.info(f"Извлеченный текст:\n{extracted_text}")
+            logging.info(f"Word Recognition Rate (WRR): {wrr:.2f}%")
+            logging.info(f"Character Error Rate (CER): {cer:.2%}")
+            
+            # Вывод результатов на экран
+            print("Извлеченный текст:")
+            print(extracted_text)
+            print(f"Word Recognition Rate (WRR): {wrr:.2f}%")
+            print(f"Character Error Rate (CER): {cer:.2%}")
+
+        except Exception as e:
+            logging.error(f"Ошибка в процессе обработки: {e}")
     
