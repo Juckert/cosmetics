@@ -2,6 +2,7 @@ import pytesseract
 import logging
 import cv2
 import Levenshtein
+import re
 
 pytesseract.pytesseract.tesseract_cmd = r'Путь до tesseract'
 
@@ -44,7 +45,21 @@ class TextExtractor:
         logging.info(f"Извлечение текста с помощью Tesseract с параметром --psm {psm}.")
         custom_config = f'--psm {psm} -l eng+rus'  # Указываем язык
         extracted_text = pytesseract.image_to_string(self.processed_image, config=custom_config)
-        return extracted_text
+        
+        return extracted_text.lower()
+    
+    def extract_composition(self, text: str) -> str:
+        """Извлечение состава из полного текста."""
+        logging.info("Извлечение состава из текста.")
+        
+        # Регулярное выражение 
+        match = re.search(r'(состав:|ingredients:)(.*?\.)', text, re.IGNORECASE | re.DOTALL)
+        
+        if match:
+            composition = match.group(2).strip()
+            return composition.replace('\n', ' ')
+        
+        return "Состав не найден."   
 
     def save_text_to_file(self, text: str, output_file: str):
         """Сохранение извлеченного текста в файл."""
@@ -84,21 +99,20 @@ class TextExtractor:
             self.load_image()
             self.preprocess_image(blur=blur, adaptive=adaptive)
             extracted_text = self.extract_text(psm=psm)
-            self.save_text_to_file(extracted_text, output_file)
             
-            # Вычисление и вывод WRR и CER
-            wrr = self.calculate_wrr(ground_truth, extracted_text)
-            cer = self.calculate_cer(ground_truth, extracted_text)
+            # Извлекаем состав из полного текста
+            composition = self.extract_composition(extracted_text)
             
-            logging.info(f"Извлеченный текст:\n{extracted_text}")
+            # Сохраняем состав в файл
+            self.save_text_to_file(composition, output_file)
+            
+            # Вычисление и вывод WRR и CER на основе состава
+            wrr = self.calculate_wrr(ground_truth.lower(), composition)
+            cer = self.calculate_cer(ground_truth.lower(), composition)
+            
+            logging.info(f"Состав:\n{composition}")
             logging.info(f"Word Recognition Rate (WRR): {wrr:.2f}%")
             logging.info(f"Character Error Rate (CER): {cer:.2%}")
-            
-            # Вывод результатов на экран
-            print("Извлеченный текст:")
-            print(extracted_text)
-            print(f"Word Recognition Rate (WRR): {wrr:.2f}%")
-            print(f"Character Error Rate (CER): {cer:.2%}")
 
         except Exception as e:
             logging.error(f"Ошибка в процессе обработки: {e}")
