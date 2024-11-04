@@ -22,4 +22,4 @@
 
 Изображение: `images/rexona.jpg`.
 
-Текст: `example.txt`
+Текст: [example.txt](example.txt)
