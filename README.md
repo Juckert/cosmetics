@@ -22,7 +22,7 @@
 
 ## Пример
 
-Пусть до tesseract по умолочанию: 'C:\Program Files\Tesseract-OCR\tesseract.exe'
+Пусть до tesseract по умолочанию: `C:\Program Files\Tesseract-OCR\tesseract.exe`
 
 Изображение: [rexona.jpg](images/rexona.jpg)
 
