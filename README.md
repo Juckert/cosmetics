@@ -20,8 +20,6 @@
 
 ## Пример
 
-Для проверки можно использовать изображение `images/rexona.jpg`.
+Изображение: `images/rexona.jpg`.
 
-Текст:
-
-`example.txt`
+Текст: `example.txt`
