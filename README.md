@@ -20,6 +20,6 @@
 
 ## Пример
 
-Изображение: `images/rexona.jpg`.
+Изображение: [rexona.jpg](images/rexona.jpg)
 
 Текст: [example.txt](example.txt)
