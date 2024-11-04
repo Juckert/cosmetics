@@ -1,23 +1,23 @@
 # Tesseract OCR
 [Установка](##Установка)
 
+xvzc
+qwe
+safd
+zx
+asd
+qwe
+
+asd
+qwe
+qwe
+qwe
+qwe
 
 
+qwe
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+qwe
 
 
 ## Установка
