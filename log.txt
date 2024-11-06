@@ -1,0 +1,13 @@
+2024-11-06 11:14:24,213 - INFO - Загрузка изображения из 1.jpg
+2024-11-06 11:14:24,256 - INFO - Предобработка изображения: преобразование в серые тона и бинаризация.
+2024-11-06 11:14:24,260 - INFO - Извлечение текста с помощью Tesseract с параметром --psm 6.
+2024-11-06 11:14:28,030 - INFO - Извлечение состава из текста.
+2024-11-06 11:14:28,031 - INFO - Сохранение текста в файл output_text.txt
+2024-11-06 11:14:28,032 - INFO - Проверка слов на наличие в базе данных.
+2024-11-06 11:14:28,034 - INFO - Найденные плохие ингредиенты сохранены в файл output_bad_ingredients.txt
+2024-11-06 11:14:28,034 - INFO - Вычисление Word Recognition Rate (WRR).
+2024-11-06 11:14:28,034 - INFO - Вычисление Character Error Rate (CER).
+2024-11-06 11:14:28,034 - INFO - Состав:
+aqua, sodium laureth sulfate, glycerin’, sodium chloride, cocamidopropyl betaine, inulin’, lactic acid, сии acid, disodium edta, parfum, ppg-8, sodium benzoate, sodium sulfate, limonene, linatool, (119140, 4.
+2024-11-06 11:14:28,035 - INFO - Word Recognition Rate (WRR): 0.00%
+2024-11-06 11:14:28,035 - INFO - Character Error Rate (CER): 4140.00%
