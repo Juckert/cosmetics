@@ -22,6 +22,8 @@
 
 ## Пример
 
+Пусть до tesseract по умолчанию: `C:\Program Files\Tesseract-OCR\tesseract.exe`
+
 Изображение: [rexona.jpg](images/rexona.jpg)
 
 Текст: [example.txt](example.txt)
