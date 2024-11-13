@@ -47,19 +47,33 @@ class TextExtractor:
         extracted_text = pytesseract.image_to_string(self.processed_image, config=custom_config)
         
         return extracted_text.lower()
-    
+
     def extract_composition(self, text: str) -> str:
         """Извлечение состава из полного текста."""
         logging.info("Извлечение состава из текста.")
         
-        # Регулярное выражение 
-        match = re.search(r'(состав:|ingredients:)(.*?\.)', text, re.IGNORECASE | re.DOTALL)
+        # Регулярное выражение для поиска "состав" или "ingredients"
+        pattern = r'[\W_]*(состав|ingredients)[\W_:]*([\s\S]*?)(?:\.|$)'
+        match = re.search(pattern, text, re.IGNORECASE)
         
         if match:
-            composition = match.group(2).strip()
-            return composition.replace('\n', ' ')
-        
-        return "Состав не найден."   
+            composition = match.group(2).strip()  # Убираем лишние пробелы
+            
+            # Заменяем переносы строк и объединяем части слов
+            composition = re.sub(r'(\w+)-\s*(\w+)', r'\1\2', composition)
+            composition = composition.replace('\n', ' ')
+            
+            # Проверяем длину извлеченного текста
+            if len(composition) > 200:
+                end_index = composition.find('.') + 1
+                if end_index == 0:
+                    end_index = len(composition)
+                return composition[:end_index].strip()  # Возвращаем текст до точки
+            else:
+                return composition[:600].strip()  # Возвращаем первые 600 символов
+            
+        logging.warning("Состав не найден, возвращаем весь текст.")
+        return text.replace('\n', ' ')  # Возвращаем весь текст
 
     def save_text_to_file(self, text: str, output_file: str):
         """Сохранение извлеченного текста в файл."""
@@ -110,7 +124,7 @@ class TextExtractor:
             wrr = self.calculate_wrr(ground_truth.lower(), composition)
             cer = self.calculate_cer(ground_truth.lower(), composition)
             
-            logging.info(f"Состав:\n{composition}")
+            logging.info(f"Состав:{composition}")
             logging.info(f"Word Recognition Rate (WRR): {wrr:.2f}%")
             logging.info(f"Character Error Rate (CER): {cer:.2%}")
 
@@ -125,4 +139,3 @@ if __name__ == '__main__':
 
     extractor = TextExtractor(image_path)
     extractor.process(output_file, ground_truth, blur=False, adaptive=False, psm=6)
-    
