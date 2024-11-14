@@ -3,6 +3,7 @@ import logging
 import cv2
 import Levenshtein
 import re
+import sqlite3
 
 pytesseract.pytesseract.tesseract_cmd = r'Путь до tesseract'
 
@@ -114,6 +115,35 @@ class CompositionExtractor:
             
         self.logger.warning("Состав не найден, возвращаем весь текст.")
         return text.replace('\n', ' ')  # Возвращаем весь текст
+
+    def check_bad_ingredients(self, text: str, db_path: str, output_file: str):
+        """Проверка слов в тексте на наличие в базе данных и сохранение совпадений в файл."""
+        self.logger.info("Проверка слов на наличие в базе данных.")
+        try:
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            cursor.execute("SELECT ingredient_name FROM ingredients")
+            bad_ingredients = {row[0].lower() for row in cursor.fetchall()}
+
+            found_bad_ingredients = []
+            words = re.split(r'[,\s]+', text)  # Разделение по запятым и пробелам
+            for word in words:
+                word = word.strip().lower()  # Очистка и приведение к нижнему регистру
+                if word in bad_ingredients:
+                    found_bad_ingredients.append(word)
+
+            if found_bad_ingredients:
+                with open(output_file, 'w', encoding='utf-8') as f:
+                    f.write('\n'.join(found_bad_ingredients))
+                self.logger.info(f"Найденные плохие ингредиенты сохранены в файл {output_file}")
+            else:
+                self.logger.info("Плохие ингредиенты не найдены.")
+
+        except Exception as e:
+            self.logger.error(f"Ошибка при проверке слов в базе данных: {e}")
+            raise
+        finally:
+            conn.close()
 
 # Класс для преобразования изображения в текст
 class TextExtractor:
