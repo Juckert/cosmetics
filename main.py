@@ -5,7 +5,7 @@ import Levenshtein
 import re
 import sqlite3
 
-pytesseract.pytesseract.tesseract_cmd = r'Путь до tesseract'
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 # Конфигурационный класс
 class Config:
@@ -117,8 +117,8 @@ class CompositionExtractor:
         return text.replace('\n', ' ')  # Возвращаем весь текст
 
     def check_bad_ingredients(self, text: str, db_path: str, output_file: str):
-        """Проверка слов в тексте на наличие в базе данных и сохранение совпадений в файл."""
-        self.logger.info("Проверка слов на наличие в базе данных.")
+        """Проверка фраз в тексте на наличие в базе данных и сохранение совпадений в файл."""
+        self.logger.info("Проверка фраз на наличие в базе данных.")
         try:
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
@@ -126,11 +126,11 @@ class CompositionExtractor:
             bad_ingredients = {row[0].lower() for row in cursor.fetchall()}
 
             found_bad_ingredients = []
-            words = re.split(r'[,\s]+', text)  # Разделение по запятым и пробелам
-            for word in words:
-                word = word.strip().lower()  # Очистка и приведение к нижнему регистру
-                if word in bad_ingredients:
-                    found_bad_ingredients.append(word)
+            phrases = re.split(r',\s*', text)  # Разделение по запятым
+            for phrase in phrases:
+                phrase = phrase.strip().lower()  # Очистка и приведение к нижнему регистру
+                if phrase in bad_ingredients:
+                    found_bad_ingredients.append(phrase)
 
             if found_bad_ingredients:
                 with open(output_file, 'w', encoding='utf-8') as f:
@@ -187,15 +187,17 @@ class TextExtractor:
             wrr = Metrics.calculate_wrr(ground_truth.lower(), composition)
             cer = Metrics.calculate_cer(ground_truth.lower(), composition)
             
-            self.logger.info(f"Состав:{composition}")
+            #self.logger.info(f"Состав:{composition}")
             self.logger.info(f"Word Recognition Rate (WRR): {wrr:.2f}%")
             self.logger.info(f"Character Error Rate (CER): {cer:.2%}")
+
+            self.composition_extractor.check_bad_ingredients(composition, 'Pictures_for_tesseract.db', 'output_bad_ingredients.txt')
 
         except Exception as e:
             self.logger.error(f"Ошибка в процессе обработки: {e}")
 
 if __name__ == '__main__':
-    image_path = 'Путь до изображения'
+    image_path = 'images/rexona.jpg'
     output_file = 'output_composition.txt'
     
     ground_truth = '''Текст'''
