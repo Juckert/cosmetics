@@ -7,86 +7,69 @@ import sqlite3
 
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
-# логгирование отдельным классом
-# обработка изображения отдельным классом
-# отдельный класс для метрик
-# отдельный класс для поиска в тексте (поиск ингредиентов сюда же)
-# Интерфейс в виде метода save_text_to_file на основе метода process
 
-class TextExtractor:
-    def __init__(self, image_path: str):
+# Конфигурационный класс
+class Config:
+    DEFAULT_PSM = 6
+    LANGUAGES = 'eng+rus'
+
+
+# Класс для логирования
+class Logger:
+    def __init__(self, name: str, level=logging.INFO):
+        self.logger = logging.getLogger(name)
+        self.logger.setLevel(level)
+        if not self.logger.hasHandlers():  # Проверяем наличие обработчиков
+            handler = logging.StreamHandler()
+            handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+            self.logger.addHandler(handler)
+
+    def info(self, message: str):
+        self.logger.info(message)
+
+    def error(self, message: str):
+        self.logger.error(message)
+
+    def warning(self, message: str):
+        self.logger.warning(message)
+
+
+# Класс для обработки изображений
+class ImageProcessor:
+    def __init__(self, image_path: str, logger: Logger):
         self.image_path = image_path
         self.processed_image = None
         self.image = None
-
-        # Настройка логгера с поддержкой utf-8
-        logger = logging.getLogger()
-        logger.setLevel(logging.INFO)
-        handler = logging.StreamHandler()
-        handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-        handler.setLevel(logging.INFO)
-        handler.setStream(open('log.txt', 'w', encoding='utf-8'))
-        logger.addHandler(handler)
+        self.logger = logger
 
     def load_image(self):
-        """Загрузка изображения из файла."""
-        logging.info(f"Загрузка изображения из {self.image_path}")
+        self.logger.info(f"Загрузка изображения из {self.image_path}")
         self.image = cv2.imread(self.image_path)
         if self.image is None:
-            logging.error(f"Не удалось загрузить изображение: {self.image_path}")
+            self.logger.error(f"Не удалось загрузить изображение: {self.image_path}")
             raise FileNotFoundError(f"Не удалось загрузить изображение: {self.image_path}")
 
     def preprocess_image(self, blur: bool = False, adaptive: bool = False):
-        """Преобразование изображения в оттенки серого и бинаризация."""
-        logging.info("Предобработка изображения: преобразование в серые тона и бинаризация.")
+        self.logger.info("Предобработка изображения.")
         gray_image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
 
         if blur:
             gray_image = cv2.medianBlur(gray_image, 3)
 
         if adaptive:
-            self.processed_image = cv2.adaptiveThreshold(gray_image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+            self.processed_image = cv2.adaptiveThreshold(gray_image, 255,
+                                                         cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
                                                          cv2.THRESH_BINARY_INV, 11, 2)
         else:
-            _, self.processed_image = cv2.threshold(gray_image, 150, 255, cv2.THRESH_BINARY_INV)
+            _, self.processed_image = cv2.threshold(gray_image, 150, 255,
+                                                    cv2.THRESH_BINARY_INV)
 
-    def extract_text(self, psm: int = 6):
-        """Извлечение текста из обработанного изображения."""
-        if self.processed_image is None:
-            logging.error("Изображение не обработано. Вызовите метод preprocess_image() перед extract_text().")
-            raise ValueError("Изображение не обработано. Вызовите метод preprocess_image() перед extract_text().")
 
-        logging.info(f"Извлечение текста с помощью Tesseract с параметром --psm {psm}.")
-        custom_config = f'--psm {psm} -l eng+rus'  # Указываем язык
-        extracted_text = pytesseract.image_to_string(self.processed_image, config=custom_config)
-        return extracted_text.lower()
-
-    def extract_composition(self, text: str) -> str:
-        """Извлечение состава из полного текста."""
-        logging.info("Извлечение состава из текста.")
-
-        # Регулярное выражение
-        match = re.search(r'(состав:|ingredients:)(.*?\.)', text, re.IGNORECASE | re.DOTALL)
-
-        if match:
-            composition = match.group(2).strip()
-            return composition.replace('\n', ' ')
-        return "Состав не найден."
-
-    def save_text_to_file(self, text: str, output_file: str):
-        """Сохранение извлеченного текста в файл."""
-        logging.info(f"Сохранение текста в файл {output_file}")
-        try:
-            with open(output_file, 'w', encoding='utf-8') as f:
-                f.write(text)
-        except Exception as e:
-            logging.error(f"Ошибка при сохранении текста в файл: {e}")
-            raise
-
-    def calculate_wrr(self, ground_truth: str, ocr_output: str) -> float:
+# Класс для вычисления метрик
+class Metrics:
+    @staticmethod
+    def calculate_wrr(ground_truth: str, ocr_output: str) -> float:
         """Вычисление Word Recognition Rate (WRR)."""
-        logging.info("Вычисление Word Recognition Rate (WRR).")
-
         ground_truth_words = ground_truth.split()
         ocr_output_words = ocr_output.split()
 
@@ -97,17 +80,51 @@ class TextExtractor:
         wrr = (correctly_recognized_words / total_words) * 100 if total_words > 0 else 0
         return wrr
 
-    def calculate_cer(self, ground_truth: str, ocr_output: str) -> float:
+    @staticmethod
+    def calculate_cer(ground_truth: str, ocr_output: str) -> float:
         """Вычисление Character Error Rate (CER)."""
-        logging.info("Вычисление Character Error Rate (CER).")
         distance = Levenshtein.distance(ground_truth, ocr_output)
         n = len(ground_truth)
         cer = distance / n if n > 0 else 0
         return cer
 
+    # Класс для извлечения состава из текста
+
+
+class CompositionExtractor:
+    def __init__(self, logger: Logger):
+        self.logger = logger
+
+    def extract_composition(self, text: str) -> str:
+        """Извлечение состава из полного текста."""
+        self.logger.info("Извлечение состава из текста.")
+
+        # Регулярное выражение для поиска состава
+        pattern = r'[\W_]*(состав|ingredients)[\W_:]*([\s\S]*?)(?:\.|$)'
+        match = re.search(pattern, text, re.IGNORECASE)
+
+        if match:
+            composition = match.group(2).strip()
+
+            # Заменяем переносы строк и объединяем части слов
+            composition = re.sub(r'(\w+)-\s*(\w+)', r'\1\2', composition)
+            composition = composition.replace('\n', ' ')
+
+            # Проверяем длину извлеченного текста
+            if len(composition) > 200:
+                end_index = composition.find('.') + 1
+                if end_index == 0:
+                    end_index = len(composition)
+                return composition[:end_index].strip()  # Возвращаем текст до точки
+            else:
+                return composition[:600].strip()  # Возвращаем первые 600 символов
+
+        self.logger.warning("Состав не найден, возвращаем весь текст.")
+        return text.replace('\n', ' ')  # Возвращаем весь текст
+
     def check_bad_ingredients(self, text: str, db_path: str, output_file: str):
-        """Проверка слов в тексте на наличие в базе данных и сохранение совпадений в файл."""
-        logging.info("Проверка слов на наличие в базе данных.")
+        """Проверка фраз в тексте на наличие в базе данных и сохранение совпадений в файл."""
+        self.logger.info("Проверка фраз на наличие в базе данных.")
         try:
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
@@ -115,57 +132,93 @@ class TextExtractor:
             bad_ingredients = {row[0].lower() for row in cursor.fetchall()}
 
             found_bad_ingredients = []
-            words = re.split(r'[,\s]+', text)  # Разделение по запятым и пробелам
-            for word in words:
-                word = word.strip().lower()  # Очистка и приведение к нижнему регистру
-                if word in bad_ingredients:
-                    found_bad_ingredients.append(word)
+            phrases = re.split(r',\s*', text)  # Разделение по запятым
+            for phrase in phrases:
+                phrase = phrase.strip().lower()  # Очистка и приведение к нижнему регистру
+                if phrase in bad_ingredients:
+                    found_bad_ingredients.append(phrase)
 
             if found_bad_ingredients:
                 with open(output_file, 'w', encoding='utf-8') as f:
                     f.write('\n'.join(found_bad_ingredients))
-                logging.info(f"Найденные плохие ингредиенты сохранены в файл {output_file}")
+                self.logger.info(f"Найденные плохие ингредиенты сохранены в файл {output_file}")
             else:
-                logging.info("Плохие ингредиенты не найдены.")
+                self.logger.info("Плохие ингредиенты не найдены.")
 
         except Exception as e:
-            logging.error(f"Ошибка при проверке слов в базе данных: {e}")
+            self.logger.error(f"Ошибка при проверке слов в базе данных: {e}")
             raise
         finally:
             conn.close()
 
-    def process(self, output_file: str, ground_truth: str, db_path: str, output_bad_ingredients_file: str, blur: bool = False, adaptive: bool = False, psm: int = 6):
-        """Общий метод для выполнения всех шагов обработки и извлечения текста."""
-        try:
-            self.load_image()
-            self.preprocess_image(blur=blur, adaptive=adaptive)
-            extracted_text = self.extract_text(psm=psm)
 
-            # Извлекаем состав из полного текста
-            composition = self.extract_composition(extracted_text)
+# Класс для преобразования изображения в текст
+class TextExtractor:
+    def __init__(self, image_processor: ImageProcessor, composition_extractor: CompositionExtractor):
+        self.image_processor = image_processor
+        self.composition_extractor = composition_extractor
+        self.logger = Logger(__name__)
+
+    def extract_text(self) -> str:
+        """Извлечение текста из обработанного изображения."""
+        if self.image_processor.processed_image is None:
+            self.logger.error("Изображение не обработано.")
+            raise ValueError("Изображение не обработано.")
+
+        self.logger.info(f"Извлечение текста с помощью Tesseract.")
+
+        custom_config = f'--psm {Config.DEFAULT_PSM} -l {Config.LANGUAGES}'
+
+        extracted_text = pytesseract.image_to_string(self.image_processor.processed_image, config=custom_config)
+
+        return extracted_text.lower()
+
+    def save_text_to_file(self, output_file: str, ground_truth: str, blur: bool = False, adaptive: bool = False):
+        """Сохранение извлеченного текста в файл."""
+
+        try:
+            # Загружаем и обрабатываем изображение
+            self.image_processor.load_image()
+            self.image_processor.preprocess_image(blur=blur, adaptive=adaptive)
+
+            extracted_text = self.extract_text()
+
+            # Извлекаем состав из текста
+            composition = self.composition_extractor.extract_composition(extracted_text)
 
             # Сохраняем состав в файл
-            self.save_text_to_file(composition, output_file)
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write(composition)
 
-            # Проверка слов на наличие в базе данных
-            self.check_bad_ingredients(composition, db_path, output_bad_ingredients_file)
+            # Подсчет метрик
+            wrr = Metrics.calculate_wrr(ground_truth.lower(), composition)
+            cer = Metrics.calculate_cer(ground_truth.lower(), composition)
 
-            # Вычисление и вывод WRR и CER на основе состава
-            wrr = self.calculate_wrr(ground_truth.lower(), composition)
-            cer = self.calculate_cer(ground_truth.lower(), composition)
+            # self.logger.info(f"Состав:{composition}")
+            self.logger.info(f"Word Recognition Rate (WRR): {wrr:.2f}%")
+            self.logger.info(f"Character Error Rate (CER): {cer:.2%}")
 
-            logging.info(f"Состав:\n{composition}")
-            logging.info(f"Word Recognition Rate (WRR): {wrr:.2f}%")
-            logging.info(f"Character Error Rate (CER): {cer:.2%}")
+            self.composition_extractor.check_bad_ingredients(composition, 'Pictures_for_tesseract.db',
+                                                             'output_bad_ingredients.txt')
 
         except Exception as e:
-            logging.error(f"Ошибка в процессе обработки: {e}")
+            self.logger.error(f"Ошибка в процессе обработки: {e}")
+
 
 if __name__ == '__main__':
-    image_path = '1.jpg'
-    output_file = 'output_text.txt'
-    output_bad_ingredients_file = 'output_bad_ingredients.txt'
-    db_path = 'Pictures_for_tesseract.db'
+    image_path = 'images/rexona.jpg'
+    output_file = 'output_composition.txt'
+
     ground_truth = '''Текст'''
-    extractor = TextExtractor(image_path)
-    extractor.process(output_file, ground_truth, db_path, output_bad_ingredients_file, blur=False, adaptive=False, psm=6)
+
+    logger_instance = Logger(__name__)
+    image_processor_instance = ImageProcessor(image_path=image_path, logger=logger_instance)
+    composition_extractor_instance = CompositionExtractor(logger=logger_instance)
+
+    extractor_instance = TextExtractor(image_processor=image_processor_instance,
+                                       composition_extractor=composition_extractor_instance)
+
+    extractor_instance.save_text_to_file(output_file=output_file,
+                                         ground_truth=ground_truth,
+                                         blur=False,
+                                         adaptive=False)
