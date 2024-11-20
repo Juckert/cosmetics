@@ -7,6 +7,12 @@ import sqlite3
 
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
+# логгирование отдельным классом
+# обработка изображения отдельным классом
+# отдельный класс для метрик
+# отдельный класс для поиска в тексте (поиск ингредиентов сюда же)
+# Интерфейс в виде метода save_text_to_file на основе метода process
+
 class TextExtractor:
     def __init__(self, image_path: str):
         self.image_path = image_path
