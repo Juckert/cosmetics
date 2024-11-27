@@ -128,19 +128,23 @@ class CompositionExtractor:
         try:
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
-            cursor.execute("SELECT ingredient_name FROM ingredients")
-            bad_ingredients = {row[0].lower() for row in cursor.fetchall()}
+
+            phrases = re.split(r',\s*', text)  # Разделение по запятым
+            phrases = [phrase.strip().lower() for phrase in phrases]  # Очистка и приведение к нижнему регистру
 
             found_bad_ingredients = []
-            phrases = re.split(r',\s*', text)  # Разделение по запятым
             for phrase in phrases:
-                phrase = phrase.strip().lower()  # Очистка и приведение к нижнему регистру
-                if phrase in bad_ingredients:
-                    found_bad_ingredients.append(phrase)
+                cursor.execute("SELECT ingredient_name, ingredient_description FROM ingredients WHERE ingredient_name = ?", (phrase,))
+                result = cursor.fetchone()
+                if result:
+                    found_bad_ingredients.append((result[0], result[1]))
 
             if found_bad_ingredients:
+                print(found_bad_ingredients)
                 with open(output_file, 'w', encoding='utf-8') as f:
-                    f.write('\n'.join(found_bad_ingredients))
+                    for ingredient, description in found_bad_ingredients:
+                        f.write(f"{ingredient}: {description}\n")
+                    #f.write('dsddfsff')
                 self.logger.info(f"Найденные плохие ингредиенты сохранены в файл {output_file}")
             else:
                 self.logger.info("Плохие ингредиенты не найдены.")
