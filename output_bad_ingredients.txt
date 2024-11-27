@@ -1,3 +1,9 @@
+<<<<<<< HEAD
 sodium laureth sulfate
 sodium benzoate
 linatool
+=======
+sodium laureth sulfate: возможно раздражение кожи / глаз / легких или аллергия
+sodium benzoate: возможна аллергическая реакция (дерматит) и обострение симптомов при астме и крапивнице
+linatool: None
+>>>>>>> 5fece62c565b0fd1363c5f8ebb24e3fa44594a69
