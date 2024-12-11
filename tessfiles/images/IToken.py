@@ -10,3 +10,7 @@ class FileChecker:
     @staticmethod
     def get_path():
         return os.path.abspath(__NAME__)
+
+
+if __name__ == '__main__':
+    print('It is not a lib!')

@@ -8,7 +8,6 @@ bot = Bot(TOKEN)
 dispatch = Dispatcher()
 
 
-
 async def main():
         dispatch.include_router(router)
         await dispatch.start_polling(bot)

@@ -17,11 +17,6 @@ async def get_help(message: Message):
     await message.answer('Отправь фото на котором полностью видна этикетка продукта и волшебным образом получишь состав')
 
 
-@router.message(F.text == 'как дела?')
-async def how_are_you(message: Message):
-    await message.answer('Хорошо')
-
-
 @router.message(F.photo)
 async def get_photo(message: Message):
     await message.answer(f'ID фото: {message.photo[-1].file_id}')

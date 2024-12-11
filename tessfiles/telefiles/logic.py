@@ -1,6 +1,5 @@
 import os
 
-
 def get_message():
     with open('../OutputMessage/output_composition.txt', 'r', encoding='utf-8') as condition:
         checker = condition.readlines()
