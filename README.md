@@ -24,6 +24,6 @@
 
 Пусть до tesseract по умолчанию: `C:\Program Files\Tesseract-OCR\tesseract.exe`
 
-Изображение: [rexona.jpg](images/rexona.jpg)
+Изображение: [rexona.jpg](tessfiles/images/input.jpg)
 
-Текст: [example.txt](example.txt)
+Текст: [example.txt](tessfiles/OutputMessage/example.txt)

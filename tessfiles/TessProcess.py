@@ -7,12 +7,10 @@ import sqlite3
 
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
-
 # Конфигурационный класс
 class Config:
     DEFAULT_PSM = 6
     LANGUAGES = 'eng+rus'
-
 
 # Класс для логирования
 class Logger:
@@ -32,7 +30,6 @@ class Logger:
 
     def warning(self, message: str):
         self.logger.warning(message)
-
 
 # Класс для обработки изображений
 class ImageProcessor:
@@ -62,8 +59,7 @@ class ImageProcessor:
                                                          cv2.THRESH_BINARY_INV, 11, 2)
         else:
             _, self.processed_image = cv2.threshold(gray_image, 150, 255,
-                                                    cv2.THRESH_BINARY_INV)
-
+                                                     cv2.THRESH_BINARY_INV)
 
 # Класс для вычисления метрик
 class Metrics:
@@ -72,11 +68,11 @@ class Metrics:
         """Вычисление Word Recognition Rate (WRR)."""
         ground_truth_words = ground_truth.split()
         ocr_output_words = ocr_output.split()
-
+        
         total_words = len(ground_truth_words)
-
+        
         correctly_recognized_words = sum(1 for word in ocr_output_words if word in ground_truth_words)
-
+        
         wrr = (correctly_recognized_words / total_words) * 100 if total_words > 0 else 0
         return wrr
 
@@ -86,11 +82,9 @@ class Metrics:
         distance = Levenshtein.distance(ground_truth, ocr_output)
         n = len(ground_truth)
         cer = distance / n if n > 0 else 0
-        return cer
+        return cer 
 
-    # Класс для извлечения состава из текста
-
-
+# Класс для извлечения состава из текста
 class CompositionExtractor:
     def __init__(self, logger: Logger):
         self.logger = logger
@@ -98,18 +92,18 @@ class CompositionExtractor:
     def extract_composition(self, text: str) -> str:
         """Извлечение состава из полного текста."""
         self.logger.info("Извлечение состава из текста.")
-
+        
         # Регулярное выражение для поиска состава
         pattern = r'[\W_]*(состав|ingredients)[\W_:]*([\s\S]*?)(?:\.|$)'
         match = re.search(pattern, text, re.IGNORECASE)
-
+        
         if match:
             composition = match.group(2).strip()
-
+            
             # Заменяем переносы строк и объединяем части слов
             composition = re.sub(r'(\w+)-\s*(\w+)', r'\1\2', composition)
             composition = composition.replace('\n', ' ')
-
+            
             # Проверяем длину извлеченного текста
             if len(composition) > 200:
                 end_index = composition.find('.') + 1
@@ -118,7 +112,7 @@ class CompositionExtractor:
                 return composition[:end_index].strip()  # Возвращаем текст до точки
             else:
                 return composition[:600].strip()  # Возвращаем первые 600 символов
-
+            
         self.logger.warning("Состав не найден, возвращаем весь текст.")
         return text.replace('\n', ' ')  # Возвращаем весь текст
 
@@ -151,7 +145,6 @@ class CompositionExtractor:
         finally:
             conn.close()
 
-
 # Класс для преобразования изображения в текст
 class TextExtractor:
     def __init__(self, image_processor: ImageProcessor, composition_extractor: CompositionExtractor):
@@ -164,61 +157,66 @@ class TextExtractor:
         if self.image_processor.processed_image is None:
             self.logger.error("Изображение не обработано.")
             raise ValueError("Изображение не обработано.")
-
+        
         self.logger.info(f"Извлечение текста с помощью Tesseract.")
-
+        
         custom_config = f'--psm {Config.DEFAULT_PSM} -l {Config.LANGUAGES}'
-
+        
         extracted_text = pytesseract.image_to_string(self.image_processor.processed_image, config=custom_config)
-
+        
         return extracted_text.lower()
 
     def save_text_to_file(self, output_file: str, ground_truth: str, blur: bool = False, adaptive: bool = False):
         """Сохранение извлеченного текста в файл."""
-
+        
         try:
             # Загружаем и обрабатываем изображение
             self.image_processor.load_image()
             self.image_processor.preprocess_image(blur=blur, adaptive=adaptive)
-
+            
             extracted_text = self.extract_text()
-
+            
             # Извлекаем состав из текста
             composition = self.composition_extractor.extract_composition(extracted_text)
-
+            
             # Сохраняем состав в файл
             with open(output_file, 'w', encoding='utf-8') as f:
                 f.write(composition)
-
-            # Подсчет метрик
+            
+            # Подсчет метрик    
             wrr = Metrics.calculate_wrr(ground_truth.lower(), composition)
             cer = Metrics.calculate_cer(ground_truth.lower(), composition)
-
-            # self.logger.info(f"Состав:{composition}")
+            
+            #self.logger.info(f"Состав:{composition}")
             self.logger.info(f"Word Recognition Rate (WRR): {wrr:.2f}%")
             self.logger.info(f"Character Error Rate (CER): {cer:.2%}")
 
-            self.composition_extractor.check_bad_ingredients(composition, 'Pictures_for_tesseract.db',
-                                                             'output_bad_ingredients.txt')
+            self.composition_extractor.check_bad_ingredients(composition, 'DataBase/Pictures_for_tesseract.db',
+                                                             '../OutputMessage/output_bad_ingredients.txt')
 
         except Exception as e:
             self.logger.error(f"Ошибка в процессе обработки: {e}")
 
 
+class DoWorkInterface:
+    def __init__(self, file: str, path='images/input.jpg'):
+        self.__image_path = path
+        self.__output_file = file
+        self.__ground_truth = '''Текст'''
+        self.__logger_instance = Logger(__name__)
+        self.__image_processor_instance = ImageProcessor(image_path=self.__image_path, logger=self.__logger_instance)
+        self.__composition_extractor_instance = CompositionExtractor(logger=self.__logger_instance)
+
+        self.__extractor_instance = TextExtractor(image_processor=self.__image_processor_instance,
+                                           composition_extractor=self.__composition_extractor_instance)
+
+    def main_process(self):
+        self.__extractor_instance.save_text_to_file(output_file=self.__output_file,
+                                             ground_truth=self.__ground_truth,
+                                             blur=False,
+                                             adaptive=False)
+
+
+
 if __name__ == '__main__':
-    image_path = 'images/rexona.jpg'
-    output_file = 'output_composition.txt'
-
-    ground_truth = '''Текст'''
-
-    logger_instance = Logger(__name__)
-    image_processor_instance = ImageProcessor(image_path=image_path, logger=logger_instance)
-    composition_extractor_instance = CompositionExtractor(logger=logger_instance)
-
-    extractor_instance = TextExtractor(image_processor=image_processor_instance,
-                                       composition_extractor=composition_extractor_instance)
-
-    extractor_instance.save_text_to_file(output_file=output_file,
-                                         ground_truth=ground_truth,
-                                         blur=False,
-                                         adaptive=False)
+    print('It is not a lib!')

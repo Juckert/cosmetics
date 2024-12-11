@@ -1,19 +1,12 @@
-from DoWorkInterface import DoWork
-import os
-
-get_time = lambda f: os.stat(f).st_ctime
-
-fn = '1.jpg'
-dir = 'pic/'
-prev_time = get_time(dir + fn)
+from TessProcess import DoWorkInterface
+from images import IToken
 
 
-main_method = DoWork(fn) # 1 jpg --- current container
-
+fc = IToken.FileChecker
+prev_time = fc.get_time()
 
 if __name__ == '__main__':
     while True:
-        t = get_time(dir + fn)
-        if t != prev_time:
-            print(main_method.its())
-            prev_time = t
+        if fc.get_time() != prev_time:
+            DoWorkInterface('../OutputMessage/output_composition.txt', path=fc.get_path()).main_process()
+            prev_time = fc.get_time()
