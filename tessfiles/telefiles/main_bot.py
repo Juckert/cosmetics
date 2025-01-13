@@ -1,20 +1,25 @@
 import asyncio
 import logging
-from aiogram import Bot, Dispatcher, F
-from config import TOKEN
-from handlers import router
+from aiogram import Bot, Dispatcher
+from tessfiles.telefiles.config import TOKEN
+from tessfiles.telefiles.handlers import router, im
 
-bot = Bot(TOKEN)
-dispatch = Dispatcher()
+prev_time = im.get_time()
 
 
-async def main():
-        dispatch.include_router(router)
-        await dispatch.start_polling(bot)
+class DoBotInterface:
+    def __init__(self):
+        self.__bot__ = Bot(TOKEN)
+        self.__dispatch__ = Dispatcher()
 
-if __name__ == '__main__':
-    logging.basicConfig(level = logging.INFO)
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        print('EXIT')
+    async def __run__(self):
+        self.__dispatch__.include_router(router)
+        await self.__dispatch__.start_polling(self.__bot__)
+
+    def main_process(self):
+        logging.basicConfig(level=logging.INFO)
+        try:
+            asyncio.run(self.__run__())
+        except KeyboardInterrupt:
+            print('EXIT')
+

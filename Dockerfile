@@ -10,7 +10,5 @@ RUN pip install -r requirements.txt
 RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
 
 COPY tessfiles/ .
-COPY tessfiles/images/ .
 
-
-CMD ["python", "run.py"]
+CMD ["python", "Tesseract\RUN.py"]

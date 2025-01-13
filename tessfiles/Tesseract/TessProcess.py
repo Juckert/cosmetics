@@ -4,6 +4,8 @@ import cv2
 import Levenshtein
 import re
 import sqlite3
+from tessfiles.OutputMessage import MToken
+
 
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
@@ -138,12 +140,14 @@ class CompositionExtractor:
                 if phrase in bad_ingredients:
                     found_bad_ingredients.append(phrase)
 
-            if found_bad_ingredients:
-                with open(output_file, 'w', encoding='utf-8') as f:
-                    f.write('\n'.join(found_bad_ingredients))
-                self.logger.info(f"Найденные плохие ингредиенты сохранены в файл {output_file}")
-            else:
-                self.logger.info("Плохие ингредиенты не найдены.")
+            with open(output_file, 'w', encoding='utf-8') as f:
+                if found_bad_ingredients:
+                    f.write('Найдены вредные ингредиенты:\n')
+                    f.write(' '.join(found_bad_ingredients))
+                    self.logger.info(f"Найденные плохие ингредиенты сохранены в файл {output_file}")
+                else:
+                    self.logger.info("Плохие ингредиенты не найдены.")
+                    f.write('Плохие ингредиенты в составе не обнаружены.')
 
         except Exception as e:
             self.logger.error(f"Ошибка при проверке слов в базе данных: {e}")
@@ -198,7 +202,7 @@ class TextExtractor:
             self.logger.info(f"Word Recognition Rate (WRR): {wrr:.2f}%")
             self.logger.info(f"Character Error Rate (CER): {cer:.2%}")
 
-            self.composition_extractor.check_bad_ingredients(composition, 'DataBase/Pictures_for_tesseract.db',
+            self.composition_extractor.check_bad_ingredients(composition, '../DataBase/Pictures_for_tesseract.db',
                                                              '../OutputMessage/output_bad_ingredients.txt')
 
         except Exception as e:
@@ -206,7 +210,7 @@ class TextExtractor:
 
 
 class DoWorkInterface:
-    def __init__(self, file: str, path='images/input.jpg'):
+    def __init__(self, file: str, path='input.jpg'):
         self.__image_path = path
         self.__output_file = file
         self.__ground_truth = '''Текст'''
@@ -216,8 +220,9 @@ class DoWorkInterface:
 
         self.__extractor_instance = TextExtractor(image_processor=self.__image_processor_instance,
                                                   composition_extractor=self.__composition_extractor_instance)
+        print(self.__image_path, self.__output_file)
 
-    def main_process(self):
+    async def main_process(self):
         self.__extractor_instance.save_text_to_file(output_file=self.__output_file,
                                                     ground_truth=self.__ground_truth,
                                                     blur=False,
@@ -225,4 +230,4 @@ class DoWorkInterface:
 
 
 if __name__ == '__main__':
-    print('It is not a lib!')
+    DoWorkInterface(MToken.FileChecker.get_path()).main_process()
