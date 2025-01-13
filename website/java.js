@@ -46,10 +46,10 @@ buttonClosingImageEdition.addEventListener('click', () => {
 });
 
 // Обработчик события очистки выбора
-clearButton.addEventListener('click', () => {
+/*clearButton.addEventListener('click', () => {
   clearForm();
   console.log('очистили форму');
-});
+});*/
 
 // Обработчик события уменьшения масштаба
 scaleSmallerButton.addEventListener('click', () => {
@@ -180,3 +180,5 @@ capturePhotoButton.addEventListener('click', () => {
       alert('Ваш браузер не поддерживает доступ к камере.');
   }
 });
+
+

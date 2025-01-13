@@ -402,14 +402,31 @@
   line-height: 48px;
   text-align: center;
   color: #3A3A3A;
+  margin-bottom: 60px;
 }
 
 /* Форма редактирования изображения */
 .img-upload__overlay {
-  position: relative;
-  border: 1px solid #ccc;
+  position: fixed; /* фиксированное положение */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* Полупрозрачный фон */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* убеждаемся, что форма находится поверх остального содержимого */
+}
+
+.img-upload__wrapper {
+  background: #fff; /* Белый фон для контейнера формы */
+  border-radius: 10px;
   padding: 20px;
-  margin-top: 20px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  width: 90%;
+  max-width: 600px;
+  text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -448,13 +465,11 @@
   object-fit: cover;
 }
 
-/* Кнопка для закрытия формы редактирования изображения */
+/* Кнопка для закрытия формы редактирования изображения и отправки на проверку*/
 .button-text {
   cursor: pointer;
   margin: 10px;
   padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
   border: none;
   border-radius: 5px;
 }
@@ -471,4 +486,120 @@
 /* Черный цвет текста */
 .hint-text-black {
   color: #000000;
+}
+
+/* Стили для кнопок в img-upload__start */
+.img-upload__start {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px; /* расстояние между кнопками */
+  width: 100%; /* ширина контейнера */
+  max-width: 400px; /*максимальная ширина контейнера */
+  margin: 0 auto; /* центрирование контейнера */
+}
+
+.img-upload__start .img-upload__label {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 43px;
+  gap: 10px;
+  width: 100%; /* ширина кнопки относительно контейнера */
+  max-width: 300px; /* максимальная ширина кнопки */
+  height: 60px;
+  border: 2px dashed #3A3A3A;
+  border-radius: 40px;
+  background: #FFE198;
+  color: #3A3A3A;
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 29px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.img-upload__start .img-upload__label:hover {
+  background-color: #e0cc98;
+}
+
+/* cкрыть стандартную кнопку загрузки файла */
+.img-upload__input {
+  display: none;
+}
+
+/* Медиа-запросы для адаптации размеров кнопок */
+@media (max-width: 768px) {
+  .img-upload__start .img-upload__label {
+    max-width: 250px; /* Фиксированная ширина для меньших экранов */
+  }
+}
+
+@media (max-width: 480px) {
+  .img-upload__start .img-upload__label {
+    max-width: 200px; /* Фиксированная ширина для еще меньших экранов */
+  }
+}
+
+.button-text:hover {
+  background-color: #0056b3;
+}
+
+/* стили для кнопок */
+.button {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 43px;
+  gap: 10px;
+  width: auto;
+  height: 60px;
+  border: 2px dashed #3A3A3A;
+  border-radius: 40px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.3s;
+}
+
+.scale__control {
+  background-color: #FFE190;
+  color: #3A3A3A;
+}
+
+/* кнопка "Закрыть" */
+.button-2 {
+  background-color: #FF90EA;
+  color: white;
+}
+
+.button-2:hover {
+  background-color: #FF10EF;
+  transform: scale(1.05);
+}
+
+/* кнопка "Проверить" */
+.button-3 {
+  background-color: #4ACFFF;
+  color: white;
+}
+
+.button-3:hover {
+  background-color: #5FBFDD; 
+  transform: scale(1.05);
+}
+
+/* стили для текста внутри кнопок */
+.button-text {
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 29px;
+  text-align: center;
+  color: #FFFFFF;
 }
