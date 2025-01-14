@@ -527,7 +527,7 @@
   background-color: #e0cc98;
 }
 
-/* cкрыть стандартную кнопку загрузки файла */
+/* скрыть стандартную кнопку загрузки файла */
 .img-upload__input {
   display: none;
 }
@@ -589,7 +589,7 @@
 }
 
 .button-3:hover {
-  background-color: #5FBFDD; 
+  background-color: #5FBFDD;
   transform: scale(1.05);
 }
 
@@ -602,4 +602,62 @@
   line-height: 29px;
   text-align: center;
   color: #FFFFFF;
+}
+
+/* Стили для списка источников */
+.sources-list {
+  list-style-type: none; /* Убираем маркеры списка */
+  padding: 20px; /* Добавляем отступы со всех сторон */
+  margin: 0; /* Убираем отступы */
+}
+
+.sources-item {
+  margin-bottom: 20px; /* Расстояние между элементами списка */
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  position: relative; /* Добавляем position: relative для правильного отображения линии */
+  padding: 10px; /* Добавляем отступы внутри элемента списка */
+}
+
+.sources-link {
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 29px;
+  color: #000000;
+  text-decoration: none; /* Убираем подчеркивание ссылок */
+  margin-right: 10px; /* Расстояние между ссылкой и описанием */
+  white-space: nowrap; /* Предотвращаем перенос текста на новую строку */
+}
+
+.sources-link:hover {
+  text-decoration: underline; /* Подчеркивание при наведении */
+  color: #0056b3; /* Цвет ссылки при наведении */
+}
+
+.sources-description {
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 24px;
+  color: #3A3A3A;
+  white-space: nowrap; /* Предотвращаем перенос текста на новую строку */
+}
+
+.sources-item::after {
+  content: '';
+  display: block;
+  width: calc(100% - 20px); /* Уменьшаем ширину линии, чтобы она не выходила за пределы отступов */
+  height: 1px;
+  background-color: #ccc; /* Линия под каждым элементом списка */
+  position: absolute; /* Позиционируем линию абсолютно */
+  bottom: -10px; /* Перемещаем линию под элемент списка */
+  left: 10px; /* Сдвигаем линию вправо, чтобы она не выходила за пределы отступов */
+}
+
+.sources-item:last-child::after {
+  display: none; /* Убираем линию под последним элементом списка */
 }
