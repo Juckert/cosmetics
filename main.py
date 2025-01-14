@@ -5,7 +5,7 @@ import Levenshtein
 import re
 import sqlite3
 
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+pytesseract.pytesseract.tesseract_cmd = r'Путь до tesseract'
 
 # Конфигурационный класс
 class Config:
@@ -61,6 +61,45 @@ class ImageProcessor:
             _, self.processed_image = cv2.threshold(gray_image, 150, 255,
                                                      cv2.THRESH_BINARY_INV)
 
+    def check_and_rotate_image(self):
+        """Проверка ориентации изображения и его поворот, если необходимо."""
+        self.logger.info("Проверка ориентации изображения.")
+
+        # Используем Tesseract для определения ориентации текста
+        osd = pytesseract.image_to_osd(self.image)
+        angle = int(re.search(r'(?<=Rotate: )\d+', osd).group(0))
+
+        def process_rotation(image, rotation_type):
+            """Обработка изображения с поворотом."""
+            rotated = cv2.rotate(image, rotation_type)
+            gray = cv2.cvtColor(rotated, cv2.COLOR_BGR2GRAY)
+            _, processed = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY_INV)
+
+            custom_config = f'--psm {Config.DEFAULT_PSM} -l {Config.LANGUAGES}'
+            extracted_text = pytesseract.image_to_string(processed, config=custom_config)
+            cer = Metrics.calculate_cer(ground_truth.lower(), extracted_text.lower())
+            return rotated, cer
+
+        if angle == 180:
+            self.logger.info("Изображение перевернуто, поворачиваем на 180 градусов.")
+            self.image = cv2.rotate(self.image, cv2.ROTATE_180)
+        elif angle in [90, 270]:
+            self.logger.info("Изображение повернуто на 90 или 270 градусов.")
+
+            # Обработка для 90 и 270 градусов
+            rotated_90, cer_90 = process_rotation(self.image, cv2.ROTATE_90_CLOCKWISE)
+            rotated_270, cer_270 = process_rotation(self.image, cv2.ROTATE_90_COUNTERCLOCKWISE)
+
+            # Выбор варианта с меньшим CER
+            if cer_90 < cer_270:
+                self.logger.info("Выбран поворот на 270 градусов.")
+                self.image = rotated_270
+            else:
+                self.logger.info("Выбран поворот на 90 градусов.")
+                self.image = rotated_90
+        else:
+            self.logger.info("Изображение в правильной ориентации.")
+            
 # Класс для вычисления метрик
 class Metrics:
     @staticmethod
@@ -117,8 +156,8 @@ class CompositionExtractor:
         return text.replace('\n', ' ')  # Возвращаем весь текст
 
     def check_bad_ingredients(self, text: str, db_path: str, output_file: str):
-        """Проверка фраз в тексте на наличие в базе данных и сохранение совпадений в файл."""
-        self.logger.info("Проверка фраз на наличие в базе данных.")
+        """Проверка слов в тексте на наличие в базе данных и сохранение совпадений в файл."""
+        self.logger.info("Проверка слов на наличие в базе данных.")
         try:
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
@@ -126,11 +165,11 @@ class CompositionExtractor:
             bad_ingredients = {row[0].lower() for row in cursor.fetchall()}
 
             found_bad_ingredients = []
-            phrases = re.split(r',\s*', text)  # Разделение по запятым
-            for phrase in phrases:
-                phrase = phrase.strip().lower()  # Очистка и приведение к нижнему регистру
-                if phrase in bad_ingredients:
-                    found_bad_ingredients.append(phrase)
+            words = re.split(r'[,\s]+', text)  # Разделение по запятым и пробелам
+            for word in words:
+                word = word.strip().lower()  # Очистка и приведение к нижнему регистру
+                if word in bad_ingredients:
+                    found_bad_ingredients.append(word)
 
             if found_bad_ingredients:
                 with open(output_file, 'w', encoding='utf-8') as f:
@@ -172,6 +211,7 @@ class TextExtractor:
         try:
             # Загружаем и обрабатываем изображение
             self.image_processor.load_image()
+            self.image_processor.check_and_rotate_image()  # Проверка и поворот изображения
             self.image_processor.preprocess_image(blur=blur, adaptive=adaptive)
             
             extracted_text = self.extract_text()
@@ -187,17 +227,15 @@ class TextExtractor:
             wrr = Metrics.calculate_wrr(ground_truth.lower(), composition)
             cer = Metrics.calculate_cer(ground_truth.lower(), composition)
             
-            #self.logger.info(f"Состав:{composition}")
+            self.logger.info(f"Состав:{composition}")
             self.logger.info(f"Word Recognition Rate (WRR): {wrr:.2f}%")
             self.logger.info(f"Character Error Rate (CER): {cer:.2%}")
-
-            self.composition_extractor.check_bad_ingredients(composition, 'Pictures_for_tesseract.db', 'output_bad_ingredients.txt')
 
         except Exception as e:
             self.logger.error(f"Ошибка в процессе обработки: {e}")
 
 if __name__ == '__main__':
-    image_path = 'images/rexona.jpg'
+    image_path = 'Путь до изображения'
     output_file = 'output_composition.txt'
     
     ground_truth = '''Текст'''
