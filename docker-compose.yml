@@ -1,0 +1,17 @@
+networks:
+  dev:
+
+services:
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - "9000:80"
+    depends_on:
+      - frontend
+    networks:
+      - dev
+  frontend:
+    build:
+      context: frontend
+    networks:
+      - dev
